@@ -1,0 +1,2 @@
+org.hfx.keycloak.spi.VerificationCodeRestSpi
+org.hfx.keycloak.spi.VerificationCodeSmsSpi

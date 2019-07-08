@@ -1,0 +1,2 @@
+org.hfx.keycloak.spi.PhoneNumberAuthenticatorFactory
+org.hfx.keycloak.spi.VerificationCodeAuthenticatorFactory
