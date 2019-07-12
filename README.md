@@ -27,7 +27,15 @@ curl -X POST \
 }'
 ```
 
-And then use the code to login with `Verification Code` authentication flow.
+And then use `Verification Code` authentication flow with the code to obtain an access code.
+
+```
+curl -X POST \
+  http://localhost:8081/auth/realms/$YOUR_REALM/protocol/openid-connect/token \
+  -H 'authorization: Basic c2h1bmRhby1hZG1pbjoxODc3MGYxMi02NjE4LTQwOTctYThmYi1kMjA0Mzg0Mzg4OTk=' \
+  -H 'content-type: application/x-www-form-urlencoded' \
+  -d 'grant_type=password&phone_number=$PHONE_NUMBER&code=$VERIFICATION_CODE'
+```
 
 ## Configuration
 
