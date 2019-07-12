@@ -32,7 +32,7 @@ public class PhoneNumberAuthenticator extends BaseDirectGrantAuthenticator {
 
     protected UserModel findUser(AuthenticationFlowContext context) {
         List<UserModel> users = context.getSession().users().searchForUserByUserAttribute(
-                "phone_number", context.getHttpRequest().getDecodedFormParameters().getFirst("phone_number"), context.getRealm());
+                "phoneNumber", context.getHttpRequest().getDecodedFormParameters().getFirst("phone_number"), context.getRealm());
         if (users.isEmpty()) {
             return null;
         }

@@ -59,7 +59,6 @@ public class VerificationCodeAuthenticator extends BaseDirectGrantAuthenticator 
     private boolean validateVerificationCode(AuthenticationFlowContext context) {
         String phoneNumber = context.getHttpRequest().getDecodedFormParameters().getFirst("phone_number");
         String code = context.getHttpRequest().getDecodedFormParameters().getFirst("code");
-        System.out.println("answer: " + code);
         try {
             Integer veriCode = getEntityManager().createNamedQuery("VerificationCode.validateVerificationCode", Integer.class)
                     .setParameter("realmId", getRealm().getId())
