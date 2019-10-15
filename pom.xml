@@ -5,7 +5,7 @@
   <groupId>org.hfx</groupId>
   <artifactId>keycloak-phone-authenticator</artifactId>
   <packaging>jar</packaging>
-  <version>6.0.1-SNAPSHOT</version>
+  <version>7.0.0-SNAPSHOT</version>
 
   <name>keycloak-phone-authenticator</name>
   <url>https://github.com/FX-HAO/keycloak-phone-authenticator</url>
@@ -15,7 +15,7 @@
     <maven.compiler.target>1.8</maven.compiler.target>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-    <version.keycloak>6.0.1</version.keycloak>
+    <version.keycloak>7.0.0</version.keycloak>
     <jboss.logging.version>3.3.2.Final</jboss.logging.version>
   </properties>
 

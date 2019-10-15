@@ -1,8 +1,6 @@
 package org.hfx.keycloak.rest;
 
 import org.keycloak.models.KeycloakSession;
-import org.keycloak.services.managers.AppAuthManager;
-import org.keycloak.services.managers.AuthenticationManager;
 
 import javax.ws.rs.Path;
 
