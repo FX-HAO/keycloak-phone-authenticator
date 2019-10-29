@@ -1,2 +1,3 @@
-org.hfx.keycloak.spi.VerificationCodeRestSpi
-org.hfx.keycloak.spi.VerificationCodeSmsSpi
+com.hfx.keycloak.spi.VerificationCodeRestSpi
+com.hfx.keycloak.spi.VerificationCodeSmsSpi
+com.hfx.keycloak.spi.CaptchaServiceSpi

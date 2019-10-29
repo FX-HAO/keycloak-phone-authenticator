@@ -1,1 +1,1 @@
-org.hfx.keycloak.rest.VerificationCodeResourceProviderFactory
+com.hfx.keycloak.rest.VerificationCodeResourceProviderFactory

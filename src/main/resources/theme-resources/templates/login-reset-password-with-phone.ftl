@@ -1,0 +1,155 @@
+<#import "template.ftl" as layout>
+<@layout.registrationLayout displayInfo=true; section>
+    <#if section = "header">
+        ${msg("emailForgotTitle")}
+    <#elseif section = "form">
+
+
+        <script src="https://cdn.jsdelivr.net/npm/vue"></script>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+        <#if captchaKey?has_content >
+        <script src="https://www.recaptcha.net/recaptcha/api.js" nonce="{NONCE}" async defer></script>
+        </#if>
+
+        <style>
+            [v-cloak] > * { display:none; }
+            [v-cloak]::before { content: "loading..."; }
+        </style>
+
+        <div id="vue-app">
+            <div v-cloak>
+            <form id="kc-reset-password-form" class="${properties.kcFormClass!}" action="${url.loginAction}" method="post">
+                <div class="alert alert-error" v-show="errorMessage">
+                    <span class="${properties.kcFeedbackErrorIcon!}"></span>
+                    <span class="kc-feedback-text">{{ errorMessage }}</span>
+                </div>
+
+                <div class="${properties.kcFormGroupClass!}">
+                    <div class="${properties.kcLabelWrapperClass!}">
+                        <ul class="nav nav-pills nav-justified">
+                            <li role="presentation" v-bind:class="{ active: usernameOrPhone }" v-on:click="usernameOrPhone = true"><a href="#"><#if !realm.loginWithEmailAllowed>${msg("username")}<#elseif !realm.registrationEmailAsUsername>${msg("usernameOrEmail")}<#else>${msg("email")}</#if></a></li>
+                            <li role="presentation" v-bind:class="{ active: !usernameOrPhone }" v-on:click="usernameOrPhone = false"><a href="#">${msg("phone")}</a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div v-if="usernameOrPhone">
+                    <div class="${properties.kcFormGroupClass!}">
+                        <div class="${properties.kcLabelWrapperClass!}">
+                            <label for="username" class="${properties.kcLabelClass!}"><#if !realm.loginWithEmailAllowed>${msg("username")}<#elseif !realm.registrationEmailAsUsername>${msg("usernameOrEmail")}<#else>${msg("email")}</#if></label>
+                        </div>
+                        <div class="${properties.kcInputWrapperClass!}">
+                            <input type="text" id="username" name="username" class="${properties.kcInputClass!}" autofocus/>
+                        </div>
+                    </div>
+                </div>
+
+                <div v-show="!usernameOrPhone">
+                    <div class="${properties.kcFormGroupClass!}">
+                        <div class="${properties.kcLabelWrapperClass!}">
+                            <label for="phoneNumber" class="${properties.kcLabelClass!}">${msg("phoneNumber")}</label>
+                        </div>
+                        <div class="${properties.kcInputWrapperClass!}">
+                            <input type="text" id="phoneNumber" name="phoneNumber" v-model="phoneNumber" class="${properties.kcInputClass!}" autofocus/>
+                        </div>
+                    </div>
+
+                    <div class="${properties.kcFormGroupClass!}">
+                        <div class="${properties.kcLabelWrapperClass!}">
+                            <label for="code" class="${properties.kcLabelClass!}">${msg("verificationCode")}</label>
+                        </div>
+                        <div class="col-xs-9 col-sm-9 col-md-9 col-lg-9">
+                            <input type="text" id="code" name="code" class="${properties.kcInputClass!}" autofocus/>
+                        </div>
+                        <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
+                            <input class="${properties.kcButtonClass!} ${properties.kcButtonPrimaryClass!} ${properties.kcButtonBlockClass!} ${properties.kcButtonLargeClass!}"
+                                   type="button" v-model="requestButtonText" :disabled='requestButtonText !== initRequestButtonText' v-on:click="requestVerificationCode()"/>
+                        </div>
+                    </div>
+
+                    <#if captchaKey?has_content >
+                    <div class="${properties.kcFormGroupClass!}">
+                        <div class="${properties.kcInputWrapperClass!}">
+                            <div id="my-recaptcha" class="g-recaptcha" data-sitekey="${captchaKey}"></div>
+                        </div>
+                    </div>
+                    </#if>
+                </div>
+
+                <div class="${properties.kcFormGroupClass!} ${properties.kcFormSettingClass!}">
+                    <div id="kc-form-options" class="${properties.kcFormOptionsClass!}">
+                        <div class="${properties.kcFormOptionsWrapperClass!}">
+                            <span><a href="${url.loginUrl}">${kcSanitize(msg("backToLogin"))?no_esc}</a></span>
+                        </div>
+                    </div>
+
+                    <div id="kc-form-buttons" class="${properties.kcFormButtonsClass!}">
+                        <input class="${properties.kcButtonClass!} ${properties.kcButtonPrimaryClass!} ${properties.kcButtonBlockClass!} ${properties.kcButtonLargeClass!}" type="submit" value="${msg("doSubmit")}"/>
+                    </div>
+                </div>
+            </form>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            var app = new Vue({
+                el: '#vue-app',
+                data: {
+                    errorMessage: '',
+                    freezeRequestCodeSeconds: 0,
+                    usernameOrPhone: true,
+                    phoneNumber: '',
+                    requestButtonText: '${msg("requestVerificationCode")}',
+                    initRequestButtonText: '${msg("requestVerificationCode")}',
+                    disableRequest: function(seconds) {
+                        if (seconds <= 0) {
+                            app.requestButtonText = app.initRequestButtonText;
+                            app.freezeRequestCodeSeconds = 0;
+                        } else {
+                            app.requestButtonText = String(seconds);
+                            setTimeout(function() {
+                                app.disableRequest(seconds - 1);
+                            }, 1000);
+                        }
+                    },
+                    requestVerificationCode: function() {
+                        <#if captchaKey?has_content >
+                        const recaptchaResponse = document.getElementById('g-recaptcha-response').value;
+                        if (!recaptchaResponse) {
+                            this.errorMessage = '${msg("requireRecaptcha")}';
+                            return;
+                        }
+                        </#if>
+
+                        const phoneNumber = document.getElementById('phoneNumber').value.trim();
+                        if (!phoneNumber) {
+                            this.errorMessage = '${msg("requirePhoneNumber")}';
+                            document.getElementById('phoneNumber').focus();
+                            return;
+                        }
+
+                        if (this.requestButtonText !== this.initRequestButtonText) {
+                            return;
+                        }
+
+                        this.disableRequest(60);
+
+                        const params = new URLSearchParams();
+                        params.append('phoneNumber', this.phoneNumber);
+                        <#if captchaKey?has_content >
+                        params.append('g-recaptcha-response', recaptchaResponse);
+                        params.append('kind', '${verificationCodeKind}');
+                        </#if>
+
+                        axios
+                            .post(window.location.origin + '/auth/realms/${realm.name}/verification_codes', params)
+                            .then(res => (console.log(res.status)));
+                    }
+                }
+            });
+
+        </script>
+    <#elseif section = "info" >
+        ${msg("emailInstruction")}
+    </#if>
+</@layout.registrationLayout>

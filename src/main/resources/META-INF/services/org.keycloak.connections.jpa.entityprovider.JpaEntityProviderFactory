@@ -1,1 +1,1 @@
-org.hfx.keycloak.jpa.VerificationCodeJpaEntityProviderFactory
+com.hfx.keycloak.jpa.VerificationCodeJpaEntityProviderFactory

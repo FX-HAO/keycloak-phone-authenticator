@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
-    <changeSet author="erik.mulder@docdatapayments.com" id="example-1.0">
+    <changeSet author="haofxpro@gmail.com" id="keycloak-phone-number-7.0">
 
         <createTable tableName="VERIFICATION_CODE">
             <column name="ID" type="VARCHAR(36)">
@@ -13,6 +13,9 @@
                 <constraints nullable="false"/>
             </column>
             <column name="CODE" type="VARCHAR(36)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="KIND" type="VARCHAR(36)">
                 <constraints nullable="false"/>
             </column>
             <column name="EXPIRES_AT" type="DATETIME"/>
@@ -28,7 +31,6 @@
         <createIndex indexName="VERIFICATION_CODE_PHONE_NUMBER" tableName="VERIFICATION_CODE">
             <column name="REALM_ID" type="VARCHAR(36)" />
             <column name="PHONE_NUMBER" type="VARCHAR(36)"/>
-            <column name="CODE" type="VARCHAR(36)"/>
         </createIndex>
 
     </changeSet>
