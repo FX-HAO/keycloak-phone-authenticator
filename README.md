@@ -8,6 +8,12 @@ To install the SMS Authenticator one has to:
 * Add the jar to the Keycloak server:
   * `$ cp target/keycloak-phone-authenticator-*.jar _KEYCLOAK_HOME_/providers/`
   
+## Reset credentials with phone
+
+![WeChat13144f2eccd289afc7df3120fdb82abb](https://user-images.githubusercontent.com/6838487/67840807-a7481880-fb31-11e9-9fa8-7e165832b2aa.png)
+
+![image](https://user-images.githubusercontent.com/6838487/67840943-f2fac200-fb31-11e9-97ca-6d1c19628070.png)
+
 ## Installation
 
 This needs an SMS implementation to enable sending verification codes. There are some implementations below:  
