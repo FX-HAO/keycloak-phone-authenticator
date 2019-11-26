@@ -14,7 +14,7 @@ public class ResetCredentialEmailWithPhone extends ResetCredentialEmail {
     @Override
     public void authenticate(AuthenticationFlowContext context) {
         if (context.getExecution().isRequired() ||
-                (context.getExecution().isOptional() &&
+                (context.getExecution().isConditional() &&
                         configuredFor(context))) {
             super.authenticate(context);
         } else {
@@ -47,7 +47,7 @@ public class ResetCredentialEmailWithPhone extends ResetCredentialEmail {
     static {
         REQUIREMENT_CHOICES = new Requirement[]{
                 Requirement.REQUIRED,
-                Requirement.OPTIONAL,
+                Requirement.CONDITIONAL,
                 Requirement.DISABLED
         };
     }
