@@ -136,9 +136,9 @@
 
                         const params = new URLSearchParams();
                         params.append('phoneNumber', this.phoneNumber);
+                        params.append('kind', '${verificationCodeKind}');
                         <#if captchaKey?has_content >
                         params.append('g-recaptcha-response', recaptchaResponse);
-                        params.append('kind', '${verificationCodeKind}');
                         </#if>
 
                         axios
