@@ -1,0 +1,19 @@
+embed-server --server-config=standalone-ha.xml --std-out=echo
+batch
+
+/subsystem=keycloak-server:list-add(name=providers,value=module:com.hfx.keycloak-phone-authenticator)
+/subsystem=keycloak-server:list-add(name=providers,value=module:com.hfx.keycloak-phone-authenticator-yuntongxun-sms)
+/subsystem=keycloak-server:list-add(name=providers,value=module:yuntongxun4j)
+
+run-batch
+stop-embedded-server
+
+embed-server --server-config=standalone.xml --std-out=echo
+batch
+
+/subsystem=keycloak-server:list-add(name=providers,value=module:com.hfx.keycloak-phone-authenticator)
+/subsystem=keycloak-server:list-add(name=providers,value=module:com.hfx.keycloak-phone-authenticator-yuntongxun-sms)
+/subsystem=keycloak-server:list-add(name=providers,value=module:yuntongxun4j)
+
+run-batch
+stop-embedded-server
