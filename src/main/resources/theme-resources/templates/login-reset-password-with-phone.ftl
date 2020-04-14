@@ -63,7 +63,7 @@
                         </div>
                         <div class="col-xs-3 col-sm-3 col-md-3 col-lg-3">
                             <input class="${properties.kcButtonClass!} ${properties.kcButtonPrimaryClass!} ${properties.kcButtonBlockClass!} ${properties.kcButtonLargeClass!}"
-                                   type="button" v-model="requestButtonText" :disabled='requestButtonText !== initRequestButtonText' v-on:click="requestVerificationCode()"/>
+                                   type="button" v-model="sendButtonText" :disabled='sendButtonText !== initsendButtonText' v-on:click="sendVerificationCode()"/>
                         </div>
                     </div>
 
@@ -96,23 +96,23 @@
                 el: '#vue-app',
                 data: {
                     errorMessage: '',
-                    freezeRequestCodeSeconds: 0,
+                    freezeSendCodeSeconds: 0,
                     usernameOrPhone: true,
                     phoneNumber: '',
-                    requestButtonText: '${msg("requestVerificationCode")}',
-                    initRequestButtonText: '${msg("requestVerificationCode")}',
-                    disableRequest: function(seconds) {
+                    sendButtonText: '${msg("sendVerificationCode")}',
+                    initsendButtonText: '${msg("sendVerificationCode")}',
+                    disableSend: function(seconds) {
                         if (seconds <= 0) {
-                            app.requestButtonText = app.initRequestButtonText;
-                            app.freezeRequestCodeSeconds = 0;
+                            app.sendButtonText = app.initsendButtonText;
+                            app.freezeSendCodeSeconds = 0;
                         } else {
-                            app.requestButtonText = String(seconds);
+                            app.sendButtonText = String(seconds);
                             setTimeout(function() {
-                                app.disableRequest(seconds - 1);
+                                app.disableSend(seconds - 1);
                             }, 1000);
                         }
                     },
-                    requestVerificationCode: function() {
+                    sendVerificationCode: function() {
                         <#if captchaKey?has_content >
                         const recaptchaResponse = document.getElementById('g-recaptcha-response').value;
                         if (!recaptchaResponse) {
@@ -128,11 +128,11 @@
                             return;
                         }
 
-                        if (this.requestButtonText !== this.initRequestButtonText) {
+                        if (this.sendButtonText !== this.initsendButtonText) {
                             return;
                         }
 
-                        this.disableRequest(60);
+                        this.disableSend(60);
 
                         const params = new URLSearchParams();
                         params.append('phoneNumber', this.phoneNumber);
@@ -147,7 +147,6 @@
                     }
                 }
             });
-
         </script>
     <#elseif section = "info" >
         ${msg("emailInstruction")}
