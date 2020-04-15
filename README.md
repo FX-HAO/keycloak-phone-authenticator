@@ -14,6 +14,14 @@ To install the SMS Authenticator one has to:
 
 ![image](https://user-images.githubusercontent.com/6838487/67840943-f2fac200-fb31-11e9-97ca-6d1c19628070.png)
 
+## Phone theme
+
+![image](.github/images/phone_theme.png)
+
+To enable this you need to Select phone theme on the "Realm Settings > Themes" as below:
+
+![image](.github/images/select-phone-theme.png)
+
 ## Build into keycloak
 
 [An example shows how to build into keycloak using docker](examples/README.md)
