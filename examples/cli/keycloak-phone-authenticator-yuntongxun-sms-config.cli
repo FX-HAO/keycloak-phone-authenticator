@@ -5,6 +5,8 @@ batch
 /subsystem=keycloak-server:list-add(name=providers,value=module:com.hfx.keycloak-phone-authenticator-yuntongxun-sms)
 /subsystem=keycloak-server:list-add(name=providers,value=module:yuntongxun4j)
 
+/subsystem=keycloak-server/theme=defaults:write-attribute(name=modules,value=[com.hfx.keycloak-phone-authenticator])
+
 run-batch
 stop-embedded-server
 
@@ -14,6 +16,8 @@ batch
 /subsystem=keycloak-server:list-add(name=providers,value=module:com.hfx.keycloak-phone-authenticator)
 /subsystem=keycloak-server:list-add(name=providers,value=module:com.hfx.keycloak-phone-authenticator-yuntongxun-sms)
 /subsystem=keycloak-server:list-add(name=providers,value=module:yuntongxun4j)
+
+/subsystem=keycloak-server/theme=defaults:write-attribute(name=modules,value=[com.hfx.keycloak-phone-authenticator])
 
 run-batch
 stop-embedded-server
