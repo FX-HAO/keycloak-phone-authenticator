@@ -151,14 +151,18 @@ public class PhoneAccountFormService extends AbstractSecuredLocalService {
 
         String phoneNumber = Optional.ofNullable(formData.getFirst("user.attributes.phoneNumber")).map(String::trim).orElse("");
         List<String> phoneNumberAttr = user.getAttribute("phoneNumber");
-        if (!"".equals(phoneNumber) && !phoneNumber.equals(phoneNumberAttr.stream().findFirst().orElse(phoneNumber))) {
+        if (!"".equals(phoneNumber) && !phoneNumber.equals(phoneNumberAttr.stream().findFirst().orElse(""))) {
+            if (!session.users().searchForUserByUserAttribute("phoneNumber", phoneNumber, realm).isEmpty()) {
+                return account.setError(Response.Status.OK, "phoneNumberHasBeenUsed").setProfileFormData(formData).createResponse(AccountPages.ACCOUNT);
+            }
+
             String verificationCode = formData.getFirst("verificationCode");
 
             boolean valid = false;
             try {
                 EntityManager entityManager = session.getProvider(JpaConnectionProvider.class).getEntityManager();
                 Integer veriCode = entityManager.createNamedQuery("VerificationCode.validateVerificationCode", Integer.class)
-                        .setParameter("realmId", session.getContext().getRealm().getId())
+                        .setParameter("realmId", realm.getId())
                         .setParameter("phoneNumber", phoneNumber)
                         .setParameter("code", verificationCode)
                         .setParameter("now", new Date(), TemporalType.TIMESTAMP)
@@ -170,7 +174,7 @@ public class PhoneAccountFormService extends AbstractSecuredLocalService {
             }
             catch (NoResultException err){ }
             if (!valid) {
-                return account.setError(Response.Status.OK, "invalidVerificationCode").setProfileFormData(formData).createResponse(AccountPages.ACCOUNT.ACCOUNT);
+                return account.setError(Response.Status.OK, "invalidVerificationCode").setProfileFormData(formData).createResponse(AccountPages.ACCOUNT);
             }
         }
 
