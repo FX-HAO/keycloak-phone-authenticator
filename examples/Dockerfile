@@ -17,6 +17,7 @@ RUN $JBOSS_HOME/bin/jboss-cli.sh --file=cli/keycloak-phone-authenticator-yuntong
 RUN $JBOSS_HOME/bin/jboss-cli.sh --file=cli/module-add.cli
 COPY --from=builder /app/keycloak-phone-authenticator/target/classes/theme-resources/templates/ $JBOSS_HOME/themes/base/login/
 COPY ./messages/ messages/
+RUN rm -rf /opt/jboss/keycloak/standalone/configuration/standalone_xml_history/current
 RUN cat messages/messages_en.properties >> $JBOSS_HOME/themes/base/login/messages/messages_en.properties && \
     cat messages/messages_zh_CN.properties >> $JBOSS_HOME/themes/base/login/messages/messages_zh_CN.properties && \
     cat messages/messages_en.properties >> $JBOSS_HOME/themes/base/account/messages/messages_en.properties && \

@@ -1,6 +1,8 @@
 package com.hfx.keycloak.spi;
 
 import com.hfx.keycloak.rest.VerificationCodeResource;
+import com.hfx.keycloak.util.Recaptcha;
+import com.hfx.keycloak.util.VerificationCode;
 import org.apache.commons.lang.StringUtils;
 import org.jboss.logging.Logger;
 import org.keycloak.authentication.AuthenticationFlowContext;
@@ -35,37 +37,13 @@ public class ResetCredentialWithPhone extends ResetCredentialChooseUser {
 
     public static final String PROVIDER_ID = "reset-credentials-with-phone";
 
-    public static final String RECAPTCHA_SITE_KEY = "phoneNumber.recaptcha.siteKey";
-    public static final String RECAPTCHA_SECRET = "phoneNumber.recaptcha.secret";
-
     private static final String VERIFICATION_CODE_KIND = "reset-credential";
 
     public static final String NOT_SEND_EMAIL = "should-send-email";
 
     @Override
     public void authenticate(AuthenticationFlowContext context) {
-        String siteKey = null;
-        AuthenticatorConfigModel authenticatorConfig = context.getAuthenticatorConfig();
-        if (authenticatorConfig != null && authenticatorConfig.getConfig() != null) {
-            siteKey = authenticatorConfig.getConfig().get(RECAPTCHA_SITE_KEY);
-            String secret = authenticatorConfig.getConfig().get(RECAPTCHA_SECRET);
-
-            RealmModel realm = context.getRealm();
-            if (StringUtils.isNotEmpty(siteKey) && StringUtils.isNotEmpty(secret)) {
-                if (StringUtils.isEmpty(realm.getAttribute(VerificationCodeResource.CAPTCHA_KEY)) ||
-                        StringUtils.isEmpty(realm.getAttribute(VerificationCodeResource.CAPTCHA_SECRET))) {
-                    realm.setAttribute(VerificationCodeResource.CAPTCHA_KEY, siteKey);
-                    realm.setAttribute(VerificationCodeResource.CAPTCHA_SECRET, secret);
-                }
-            } else {
-                if (StringUtils.isNotEmpty(realm.getAttribute(VerificationCodeResource.CAPTCHA_KEY))) {
-                    realm.removeAttribute(VerificationCodeResource.CAPTCHA_KEY);
-                }
-                if (StringUtils.isNotEmpty(realm.getAttribute(VerificationCodeResource.CAPTCHA_SECRET))) {
-                    realm.removeAttribute(VerificationCodeResource.CAPTCHA_SECRET);
-                }
-            }
-        }
+        String siteKey = Recaptcha.getSiteKeyAndEnableRecaptcha(context);
 
         super.authenticate(context);
 
@@ -82,16 +60,9 @@ public class ResetCredentialWithPhone extends ResetCredentialChooseUser {
         MultivaluedMap<String, String> formData = context.getHttpRequest().getDecodedFormParameters();
         String username = formData.getFirst("username");
         String phoneNumber = formData.getFirst("phoneNumber");
-        String siteKey = null;
-        AuthenticatorConfigModel authenticatorConfig = context.getAuthenticatorConfig();
-        if (authenticatorConfig != null && authenticatorConfig.getConfig() != null) {
-            siteKey = authenticatorConfig.getConfig().get(RECAPTCHA_SITE_KEY);
-        }
+        String siteKey = Recaptcha.getSiteKey(context);
 
         if ((username == null || username.isEmpty()) && (phoneNumber == null || phoneNumber.isEmpty())) {
-            if (authenticatorConfig != null && authenticatorConfig.getConfig() != null) {
-                siteKey = authenticatorConfig.getConfig().get(RECAPTCHA_SITE_KEY);
-            }
             event.error(Errors.USERNAME_MISSING);
             Response challenge = context.form()
                     .setError(Messages.MISSING_USERNAME)
@@ -112,7 +83,7 @@ public class ResetCredentialWithPhone extends ResetCredentialChooseUser {
         if (user == null) {
             List<UserModel> users = context.getSession().users().searchForUserByUserAttribute(
                     "phoneNumber", phoneNumber, context.getRealm());
-            if (users.isEmpty() || !validateVerificationCode(context)) {
+            if (users.isEmpty() || !VerificationCode.verify(context, VERIFICATION_CODE_KIND)) {
                 Response challenge = context.form()
                         .setError(Messages.INVALID_USER)
                         .setAttribute("captchaKey", siteKey)
@@ -145,29 +116,6 @@ public class ResetCredentialWithPhone extends ResetCredentialChooseUser {
         context.success();
     }
 
-
-    private boolean validateVerificationCode(AuthenticationFlowContext context) {
-        String phoneNumber = Optional.ofNullable(context.getHttpRequest().getDecodedFormParameters().getFirst("phone_number")).orElse(
-                context.getHttpRequest().getDecodedFormParameters().getFirst("phoneNumber"));
-        String code = context.getHttpRequest().getDecodedFormParameters().getFirst("code");
-
-        try {
-            EntityManager entityManager = context.getSession().getProvider(JpaConnectionProvider.class).getEntityManager();
-            Integer veriCode = entityManager.createNamedQuery("VerificationCode.validateVerificationCode", Integer.class)
-                    .setParameter("realmId", context.getRealm().getId())
-                    .setParameter("phoneNumber", phoneNumber)
-                    .setParameter("code", code)
-                    .setParameter("now", new Date(), TemporalType.TIMESTAMP)
-                    .setParameter("kind", VERIFICATION_CODE_KIND)
-                    .getSingleResult();
-            if (veriCode == 1) {
-                return true;
-            }
-        }
-        catch (NoResultException err){ }
-        return false;
-    }
-
     @Override
     public String getDisplayType() {
         return "Reset Credential With Phone";
@@ -193,14 +141,14 @@ public class ResetCredentialWithPhone extends ResetCredentialChooseUser {
     static {
         ProviderConfigProperty property;
         property = new ProviderConfigProperty();
-        property.setName(RECAPTCHA_SITE_KEY);
+        property.setName(Recaptcha.RECAPTCHA_SITE_KEY);
         property.setLabel("recaptcha site key");
         property.setType(ProviderConfigProperty.STRING_TYPE);
         property.setHelpText("recaptcha site key");
         configProperties.add(property);
 
         property = new ProviderConfigProperty();
-        property.setName(RECAPTCHA_SECRET);
+        property.setName(Recaptcha.RECAPTCHA_SECRET);
         property.setLabel("recaptcha secret");
         property.setType(ProviderConfigProperty.STRING_TYPE);
         property.setHelpText("recaptcha secret");
