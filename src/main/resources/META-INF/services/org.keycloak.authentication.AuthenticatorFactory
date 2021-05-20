@@ -2,3 +2,4 @@ com.hfx.keycloak.spi.PhoneNumberAuthenticatorFactory
 com.hfx.keycloak.spi.VerificationCodeAuthenticatorFactory
 com.hfx.keycloak.spi.ResetCredentialWithPhone
 com.hfx.keycloak.spi.ResetCredentialEmailWithPhone
+com.hfx.keycloak.spi.UsernamePasswordOrPhoneFormFactory
