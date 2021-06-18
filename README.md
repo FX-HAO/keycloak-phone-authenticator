@@ -51,7 +51,7 @@ To enable this you need to Select phone theme on the "Realm Settings > Themes" a
 
 ## Installation
 
-This needs an SMS implementation to enable sending verification codes. There are some implementations below:  
+This needs an SMS implementation to enable sending verification codes. There are some implementations below (thanks in advance if you'd like to add your implementation here):  
 
   * [YunTongXun SMS Implementation](https://github.com/FX-HAO/keycloak-phone-authenticator-yuntongxun-sms)
   
