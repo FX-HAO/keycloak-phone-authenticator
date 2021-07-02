@@ -91,7 +91,7 @@ public class UsernamePasswordOrPhoneForm extends UsernamePasswordForm {
             return badPasswordHandler(context, user, clearUser,true);
         }
 
-        if (isTemporarilyDisabledByBruteForce(context, user)) return false;
+        if (isDisabledByBruteForce(context, user)) return false;
 
         if (password != null && !password.isEmpty() && context.getSession().userCredentialManager().isValid(context.getRealm(), user, UserCredentialModel.password(password))) {
             return true;

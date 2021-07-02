@@ -4,6 +4,7 @@ import org.jboss.logging.Logger;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.keycloak.common.util.UriUtils;
 import org.keycloak.connections.jpa.JpaConnectionProvider;
+import org.keycloak.events.Details;
 import org.keycloak.events.EventBuilder;
 import org.keycloak.events.EventStoreProvider;
 import org.keycloak.events.EventType;
@@ -24,6 +25,9 @@ import org.keycloak.services.resources.account.AccountFormService;
 import org.keycloak.services.util.ResolveRelative;
 import org.keycloak.services.validation.Validation;
 import org.keycloak.storage.ReadOnlyException;
+import org.keycloak.userprofile.UserProfile;
+import org.keycloak.userprofile.utils.UserUpdateHelper;
+import org.keycloak.userprofile.validation.UserProfileValidationResult;
 
 import javax.persistence.EntityManager;
 import javax.persistence.NoResultException;
@@ -38,6 +42,8 @@ import javax.ws.rs.core.Response;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.util.*;
+
+import static org.keycloak.userprofile.profile.UserProfileContextFactory.forOldAccount;
 
 public class PhoneAccountFormService extends AbstractSecuredLocalService {
     private static Set<String> VALID_PATHS = new HashSet<>();
@@ -81,7 +87,7 @@ public class PhoneAccountFormService extends AbstractSecuredLocalService {
 
         String requestOrigin = UriUtils.getOrigin(this.session.getContext().getUri().getBaseUri());
         String origin = (String)this.headers.getRequestHeaders().getFirst("Origin");
-        if (origin != null && !requestOrigin.equals(origin)) {
+        if (origin != null && !origin.equals("null") && !requestOrigin.equals(origin)) {
             throw new ForbiddenException();
         } else {
             if (!this.request.getHttpMethod().equals("GET")) {
@@ -141,12 +147,25 @@ public class PhoneAccountFormService extends AbstractSecuredLocalService {
 
         UserModel user = auth.getUser();
 
+        String oldFirstName = user.getFirstName();
+        String oldLastName = user.getLastName();
+        String oldEmail = user.getEmail();
+
         event.event(EventType.UPDATE_PROFILE).client(auth.getClient()).user(auth.getUser());
 
-        List<FormMessage> errors = Validation.validateUpdateProfileForm(realm, formData);
-        if (errors != null && !errors.isEmpty()) {
+        UserProfileValidationResult result = forOldAccount(user, formData, session).validate();
+        List<FormMessage> errors = Validation.getFormErrorsFromValidation(result);
+        if (!errors.isEmpty()) {
             setReferrerOnPage();
-            return account.setErrors(Response.Status.OK, errors).setProfileFormData(formData).createResponse(AccountPages.ACCOUNT);
+            Response.Status status = Response.Status.OK;
+
+            if (result.hasFailureOfErrorType(Messages.READ_ONLY_USERNAME)) {
+                status = Response.Status.BAD_REQUEST;
+            } else if (result.hasFailureOfErrorType(Messages.EMAIL_EXISTS, Messages.USERNAME_EXISTS)) {
+                status = Response.Status.CONFLICT;
+            }
+
+            return account.setErrors(status, errors).setProfileFormData(formData).createResponse(AccountPages.ACCOUNT);
         }
 
         String phoneNumber = Optional.ofNullable(formData.getFirst("user.attributes.phoneNumber")).map(String::trim).orElse("");
@@ -178,26 +197,35 @@ public class PhoneAccountFormService extends AbstractSecuredLocalService {
             }
         }
 
+        UserProfile updatedProfile = result.getProfile();
+        String newEmail = updatedProfile.getAttributes().getFirstAttribute(UserModel.EMAIL);
+        String newFirstName = updatedProfile.getAttributes().getFirstAttribute(UserModel.FIRST_NAME);
+        String newLastName = updatedProfile.getAttributes().getFirstAttribute(UserModel.LAST_NAME);
+
+
         try {
-            updateUsername(formData.getFirst("username"), user, session);
-            updateEmail(formData.getFirst("email"), user, session, event);
-
-            user.setFirstName(formData.getFirst("firstName"));
-            user.setLastName(formData.getFirst("lastName"));
-
-            AttributeFormDataProcessor.process(formData, realm, user);
-
-            event.success();
-
-            setReferrerOnPage();
-            return account.setSuccess(Messages.ACCOUNT_UPDATED).createResponse(AccountPages.ACCOUNT);
-        } catch (ReadOnlyException roe) {
+            // backward compatibility with old account console where attributes are not removed if missing
+            UserUpdateHelper.updateAccountOldConsole(realm, user, updatedProfile);
+        } catch (ReadOnlyException e) {
             setReferrerOnPage();
             return account.setError(Response.Status.BAD_REQUEST, Messages.READ_ONLY_USER).setProfileFormData(formData).createResponse(AccountPages.ACCOUNT);
-        } catch (ModelDuplicateException mde) {
-            setReferrerOnPage();
-            return account.setError(Response.Status.CONFLICT, mde.getMessage()).setProfileFormData(formData).createResponse(AccountPages.ACCOUNT);
         }
+
+        if (result.hasAttributeChanged(UserModel.FIRST_NAME)) {
+            event.detail(Details.PREVIOUS_FIRST_NAME, oldFirstName).detail(Details.UPDATED_FIRST_NAME, newFirstName);
+        }
+        if (result.hasAttributeChanged(UserModel.LAST_NAME)) {
+            event.detail(Details.PREVIOUS_LAST_NAME, oldLastName).detail(Details.UPDATED_LAST_NAME, newLastName);
+        }
+        if (result.hasAttributeChanged(UserModel.EMAIL)) {
+            user.setEmailVerified(false);
+            event.detail(Details.PREVIOUS_EMAIL, oldEmail).detail(Details.UPDATED_EMAIL, newEmail);
+        }
+
+        event.success();
+        setReferrerOnPage();
+        return account.setSuccess(Messages.ACCOUNT_UPDATED).createResponse(AccountPages.ACCOUNT);
+
     }
 
     private void setReferrerOnPage() {

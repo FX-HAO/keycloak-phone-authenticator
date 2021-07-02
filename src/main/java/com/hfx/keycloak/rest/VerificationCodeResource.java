@@ -108,7 +108,12 @@ public class VerificationCodeResource {
             throw new UnauthorizedException("Unknown realm in token");
         }
         session.getContext().setRealm(realm);
-        AuthenticationManager.AuthResult authResult = authManager.authenticateBearerToken(session, realm, session.getContext().getUri(), clientConnection, httpHeaders);
+        AuthenticationManager.AuthResult authResult = new AppAuthManager.BearerTokenAuthenticator(session)
+                .setRealm(realm)
+                .setConnection(clientConnection)
+                .setHeaders(this.httpHeaders)
+                .authenticate();
+
         if (authResult == null) {
             log.debug("Token not valid");
             throw new UnauthorizedException("Bearer");

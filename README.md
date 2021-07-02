@@ -1,5 +1,7 @@
 # keycloak-phone-authenticator
 
+### Keycloak 13 is supported. If you want to use this with a lower version, you may need to use tag v9.0.2
+
 To install the SMS Authenticator one has to:
 
 * Build and package the project:
